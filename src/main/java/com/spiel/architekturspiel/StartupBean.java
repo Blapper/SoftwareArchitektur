@@ -44,7 +44,7 @@ public class StartupBean {
     public boolean checkPositionBlocked(int currentX, int currentY) {
         if (currentX == getLastX() && currentY == getLastY()) {
             System.out.println("❌ Bewegung blockiert - Position unverändert"+"(" + currentX + ", " + currentY + ")");
-            return false; // Position hat sich NICHT verändert
+            return true; // Position hat sich NICHT verändert
         } else {
             setLastX(currentX);
             setLastY(currentY);
@@ -60,7 +60,7 @@ public class StartupBean {
             System.out.println("Grenze erreicht. Wert "+z);
             return false;
         }else{
-            System.out.println(" Weg Frei. Wert: "+z);
+            //System.out.println(" Weg Frei. Wert: "+z);
             return true;
         }
     }
@@ -105,7 +105,6 @@ public class StartupBean {
 
         int y = 1;
         int x = 1;
-        int posY = 0;
 
         while (gameActive) {
             GameDto status = defaultApi.gameGameIdGet(gameId);
@@ -132,17 +131,14 @@ public class StartupBean {
                    MoveInputDto moveUp = new MoveInputDto();
                    moveUp.setDirection(DirectionDto.UP);
                    MoveDto result1 = defaultApi.gameGameIdMovePost(gameId, moveUp);
+                   y = result1.getPositionAfterMove().getPositionY().intValue();
                    System.out.println(" Zug (UP): " + result1);
-                   //y++;
                    System.out.println(" Zug (UP): Y ist " + y);
-                   posY = result1.getPositionAfterMove().getPositionY().intValue();
-                   System.out.println(" Text Y hat den Wert:" + posY);
                }
 
                blocked = checkPositionBlocked(x, y);
-               if (blocked){
-                y--;
-                    }
+               System.out.println("Up, Blocked ist " + blocked);
+
 
            }
 
@@ -150,61 +146,50 @@ public class StartupBean {
 
 
                 //--------- moveRIGHT
+                int maxMoves = 6; // Sicherheitsgrenze
+                int moveCount = 0;
 
                 canMoveRight = checkBorderUpRight(x);
-                System.out.println(" Prüfe ob (RIGHT) möglich ");
-                while (canMoveRight && !blocked) {
+               // System.out.println(" Prüfe ob (RIGHT) möglich ");
 
-                    System.out.println(" Prüfe ob (RIGHT) möglich, in der Schleife ");
+                while ( canMoveRight == true && !blocked ) {
+
+                 //   System.out.println("Right, Blocked ist " + blocked);
+
+                 //   System.out.println(" Prüfe ob (RIGHT) möglich, in der Schleife ");
                     canMoveRight = checkBorderUpRight(x);
 
-                    if (canMoveRight == true && blocked == false) {
+                    if (canMoveRight == true && blocked == false ) {
                         MoveInputDto moveRight = new MoveInputDto();
                         moveRight.setDirection(DirectionDto.RIGHT);
                         MoveDto result2 = defaultApi.gameGameIdMovePost(gameId, moveRight);
                         System.out.println(" Zug (RIGHT): " + result2);
 
-                        x++;
+                        x = result2.getPositionAfterMove().getPositionX().intValue();
+                        System.out.println(" Zug (Right): x ist " + x);
 
                     }
-
                     blocked = checkPositionBlocked(x, y);
-                    if (!blocked){
-                    // x--;
-                    }
-                }
+                    System.out.println(" Zug (Right): Blocked is " + blocked);
 
-                blocked = false;
+                //    blocked = checkPositionBlocked(x, y);
+                //    System.out.println("Right, Blocked ist " + blocked);
 
-                // ------- MoveLeft
-
-                canMoveLeft = checkBorderDownLeft(x);
-
-                while (canMoveLeft) {
-
-                    canMoveLeft = checkBorderDownLeft(x);
-
-                    if (canMoveLeft == true && blocked == false) {
-                        MoveInputDto moveLeft = new MoveInputDto();
-                        moveLeft.setDirection(DirectionDto.LEFT);
-                        MoveDto result4 = defaultApi.gameGameIdMovePost(gameId, moveLeft);
-                        System.out.println(" Zug (Left): " + result4);
-                        x--;
-                    }
-
-                    blocked = checkPositionBlocked(x, y);
-                    if (!blocked)
-                    { x++;}
+                //    moveCount++;
 
                 }
 
+
                 blocked = false;
+
+
 
                 //--------- moveDOWN
 
                 canMoveDown = checkBorderDownLeft(y);
+           //     System.out.println(" Prüfe zug runter: " + canMoveDown);
 
-                while (canMoveDown) {
+            //    while (canMoveDown) {
 
                     canMoveDown = checkBorderDownLeft(y);
 
@@ -213,15 +198,50 @@ public class StartupBean {
                         moveDown.setDirection(DirectionDto.DOWN);
                         MoveDto result3 = defaultApi.gameGameIdMovePost(gameId, moveDown);
                         System.out.println(" Zug (DOWN): " + result3);
-                        y--;
+                        y = result3.getPositionAfterMove().getPositionY().intValue();
+                        System.out.println(" Zug (Down): y ist " + y);
+
+
                     }
 
+
                     blocked = checkPositionBlocked(x, y);
-                    if (!blocked)
-                    { y++;}
-                }
+
+
+              //  }
+
 
                 blocked = false;
+
+                // ------- MoveLeft
+
+                canMoveLeft = checkBorderDownLeft(x);
+
+                //     System.out.println(" Zug (Left): canMoveLeft" + canMoveLeft);
+
+                //   while (canMoveLeft) {
+
+
+                canMoveLeft = checkBorderDownLeft(x);
+
+
+                if (canMoveLeft == true && blocked == false) {
+                    MoveInputDto moveLeft = new MoveInputDto();
+                    moveLeft.setDirection(DirectionDto.LEFT);
+                    MoveDto result4 = defaultApi.gameGameIdMovePost(gameId, moveLeft);
+                     System.out.println(" Zug (Left): " + result4);
+                    x = result4.getPositionAfterMove().getPositionX().intValue();
+                    System.out.println(" Zug (Left): x ist " + x);
+                }
+
+                blocked = checkPositionBlocked(x, y);
+
+
+                //   }
+
+                blocked = false;
+
+
 
             }
         }

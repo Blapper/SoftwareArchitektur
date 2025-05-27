@@ -73,8 +73,6 @@ public class StartupBean {
         }
     }
 
-
-
     @PostConstruct
     public void init() {
         DefaultApi defaultApi = new DefaultApi();
@@ -105,6 +103,8 @@ public class StartupBean {
 
         int y = 1;
         int x = 1;
+
+
 
         while (gameActive) {
             GameDto status = defaultApi.gameGameIdGet(gameId);
@@ -189,7 +189,7 @@ public class StartupBean {
                 canMoveDown = checkBorderDownLeft(y);
            //     System.out.println(" Prüfe zug runter: " + canMoveDown);
 
-            //    while (canMoveDown) {
+                while (canMoveDown) {
 
                     canMoveDown = checkBorderDownLeft(y);
 
@@ -208,7 +208,7 @@ public class StartupBean {
                     blocked = checkPositionBlocked(x, y);
 
 
-              //  }
+                }
 
 
                 blocked = false;

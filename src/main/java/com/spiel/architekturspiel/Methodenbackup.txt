@@ -1,0 +1,206 @@
+package com.spiel.architekturspiel;
+
+import jakarta.annotation.PostConstruct;
+import org.openapitools.client.api.DefaultApi;
+import org.openapitools.client.model.*;
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+
+@Component
+public class StartupBean {
+
+    private int lastX = -1;
+    private int lastY = -1;
+    private DefaultApi defaultApi;
+    private BigDecimal gameId;
+
+    // Getter
+    public int getLastX() {
+        return lastX;
+    }
+
+    public int getLastY() {
+        return lastY;
+    }
+
+    // Setter
+    public void setLastX(int x) {
+        this.lastX = x;
+    }
+
+    public void setLastY(int y) {
+        this.lastY = y;
+    }
+
+    public boolean checkPositionBlocked(int currentX, int currentY) {
+        if (currentX == getLastX() && currentY == getLastY()) {
+            System.out.println("❌ Bewegung blockiert - Position unverändert" + "(" + currentX + ", " + currentY + ")");
+            return true; // Position hat sich NICHT verändert
+        } else {
+            setLastX(currentX);
+            setLastY(currentY);
+            System.out.println("✅ Bewegung erfolgreich zu (" + currentX + ", " + currentY + ")");
+            return false; // Position hat sich geändert
+        }
+    }
+
+    public boolean checkBorderUpRight(int z) {
+        if (z == 5) {
+            System.out.println("Grenze erreicht. Wert " + z);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public boolean checkBorderDownLeft(int z) {
+        if (z == 1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    // Bewegungsmethode für UP
+    private int[] moveUp(int x, int y) {
+        boolean canMoveUp = checkBorderUpRight(y);
+        boolean blocked = false;
+
+        while (canMoveUp && !blocked) {
+            canMoveUp = checkBorderUpRight(y);
+
+            if (canMoveUp) {
+                MoveInputDto moveUp = new MoveInputDto();
+                moveUp.setDirection(DirectionDto.UP);
+                MoveDto result = defaultApi.gameGameIdMovePost(gameId, moveUp);
+                y = result.getPositionAfterMove().getPositionY().intValue();
+                System.out.println(" Zug (UP): " + result);
+                System.out.println(" Zug (UP): Y ist " + y);
+
+                blocked = checkPositionBlocked(x, y);
+                System.out.println("Up, Blocked ist " + blocked);
+            }
+        }
+
+        return new int[]{x, y};
+    }
+
+    // Bewegungsmethode für RIGHT
+    private int[] moveRight(int x, int y) {
+        boolean canMoveRight = checkBorderUpRight(x);
+        boolean blocked = false;
+
+        while (canMoveRight && !blocked) {
+            canMoveRight = checkBorderUpRight(x);
+
+            if (canMoveRight) {
+                MoveInputDto moveRight = new MoveInputDto();
+                moveRight.setDirection(DirectionDto.RIGHT);
+                MoveDto result = defaultApi.gameGameIdMovePost(gameId, moveRight);
+                System.out.println(" Zug (RIGHT): " + result);
+
+                x = result.getPositionAfterMove().getPositionX().intValue();
+                System.out.println(" Zug (Right): x ist " + x);
+
+                blocked = checkPositionBlocked(x, y);
+                System.out.println(" Zug (Right): Blocked is " + blocked);
+            }
+        }
+
+        return new int[]{x, y};
+    }
+
+    // Bewegungsmethode für DOWN
+    private int[] moveDown(int x, int y) {
+        boolean canMoveDown = checkBorderDownLeft(y);
+        boolean blocked = false;
+
+        while (canMoveDown && !blocked) {
+            canMoveDown = checkBorderDownLeft(y);
+
+            if (canMoveDown) {
+                MoveInputDto moveDown = new MoveInputDto();
+                moveDown.setDirection(DirectionDto.DOWN);
+                MoveDto result = defaultApi.gameGameIdMovePost(gameId, moveDown);
+                System.out.println(" Zug (DOWN): " + result);
+                y = result.getPositionAfterMove().getPositionY().intValue();
+                System.out.println(" Zug (Down): y ist " + y);
+
+                blocked = checkPositionBlocked(x, y);
+            }
+        }
+
+        return new int[]{x, y};
+    }
+
+    // Bewegungsmethode für LEFT
+    private int[] moveLeft(int x, int y) {
+        boolean canMoveLeft = checkBorderDownLeft(x);
+        boolean blocked = false;
+
+        if (canMoveLeft && !blocked) {
+            MoveInputDto moveLeft = new MoveInputDto();
+            moveLeft.setDirection(DirectionDto.LEFT);
+            MoveDto result = defaultApi.gameGameIdMovePost(gameId, moveLeft);
+            System.out.println(" Zug (Left): " + result);
+            x = result.getPositionAfterMove().getPositionX().intValue();
+            System.out.println(" Zug (Left): x ist " + x);
+
+            blocked = checkPositionBlocked(x, y);
+        }
+
+        return new int[]{x, y};
+    }
+
+    @PostConstruct
+    public void init() {
+        defaultApi = new DefaultApi();
+        GameInputDto gameInput = new GameInputDto();
+        gameInput.setGroupName("OlafRose");
+        GameDto response = defaultApi.gamePost(gameInput);
+
+        gameId = response.getGameId();
+        System.out.println(response);
+
+        boolean gameActive = true;
+        int y = 1;
+        int x = 1;
+
+        while (gameActive) {
+            GameDto status = defaultApi.gameGameIdGet(gameId);
+            GameStatusDto currentStatus = status.getStatus();
+
+            if (currentStatus == GameStatusDto.SUCCESS) {
+                System.out.println("🎉 Spiel gewonnen!");
+                gameActive = false;
+            } else if (currentStatus == GameStatusDto.FAILED) {
+                System.out.println("❌ Spiel verloren.");
+                gameActive = false;
+            } else {
+                // Verwende die neuen Bewegungsmethoden
+                int[] position;
+
+                // Move UP
+                position = moveUp(x, y);
+                x = position[0];
+                y = position[1];
+
+                // Move RIGHT
+                position = moveRight(x, y);
+                x = position[0];
+                y = position[1];
+
+                // Move DOWN
+                position = moveDown(x, y);
+                x = position[0];
+                y = position[1];
+
+                // Move LEFT
+                position = moveLeft(x, y);
+                x = position[0];
+                y = position[1];
+            }
+        }
+    }
+}

@@ -6,6 +6,8 @@ import org.openapitools.client.model.GameDto;
 import org.openapitools.client.model.GameInputDto;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
 import jakarta.annotation.PostConstruct;
 import org.openapitools.client.api.DefaultApi;
 import org.openapitools.client.model.*;
@@ -21,6 +23,14 @@ public class StartupBean {
 
     private int lastX = -1;
     private int lastY = -1;
+
+    private DefaultApi defaultApi;
+    private BigDecimal gameId;
+
+    // switchcase Anwendung für Richtung.
+    enum Direction {
+        UP, RIGHT, DOWN, LEFT
+    }
 
     // Getter
     public int getLastX() {
@@ -43,7 +53,7 @@ public class StartupBean {
 
     public boolean checkPositionBlocked(int currentX, int currentY) {
         if (currentX == getLastX() && currentY == getLastY()) {
-            System.out.println("❌ Bewegung blockiert - Position unverändert"+"(" + currentX + ", " + currentY + ")");
+            System.out.println("❌ Bewegung blockiert - Position unverändert" + "(" + currentX + ", " + currentY + ")");
             return true; // Position hat sich NICHT verändert
         } else {
             setLastX(currentX);
@@ -55,41 +65,116 @@ public class StartupBean {
     } // boolean moved = checkPositionChanged(x, y);
 
 
-    public boolean checkBorderUpRight ( int z) {
-        if ( z == 5){
-            System.out.println("Grenze erreicht. Wert "+z);
+    public boolean checkBorderUpRight(int z) {
+        if (z == 5) {
+            System.out.println("Grenze erreicht. Wert " + z);
             return false;
-        }else{
-            //System.out.println(" Weg Frei. Wert: "+z);
+        } else {
+            System.out.println("Move Up or Right: Weg Frei. Wert: " + z);
             return true;
         }
     }
 
-    public boolean checkBorderDownLeft ( int z) {
-        if ( z == 1){
+    public boolean checkBorderDownLeft(int z) {
+        if (z == 1) {
+            System.out.println("Move Down or Left: Weg Frei. Wert: " + z);
             return false;
-        }else{
+        } else {
             return true;
+        }
+    }
+
+    // Bewegungsmethode für UP
+    int moveUp(int y) {
+
+        MoveInputDto moveUp = new MoveInputDto();
+        moveUp.setDirection(DirectionDto.UP);
+        MoveDto result1 = defaultApi.gameGameIdMovePost(gameId, moveUp);
+        y = result1.getPositionAfterMove().getPositionY().intValue();
+        //         System.out.println(" Zug (UP): " + result1);
+        //         System.out.println(" Zug (UP): Y ist " + y);
+        return y;
+    }
+
+    int moveRight(int z) {
+
+        MoveInputDto moveRight = new MoveInputDto();
+        moveRight.setDirection(DirectionDto.RIGHT);
+        MoveDto result2 = defaultApi.gameGameIdMovePost(gameId, moveRight);
+        z = result2.getPositionAfterMove().getPositionX().intValue();
+        System.out.println(" Zug (RIGHT): " + result2);
+
+        return z;
+    }
+
+    int moveDown(int y) {
+
+        MoveInputDto moveDown = new MoveInputDto();
+        moveDown.setDirection(DirectionDto.DOWN);
+        MoveDto result3 = defaultApi.gameGameIdMovePost(gameId, moveDown);
+        y = result3.getPositionAfterMove().getPositionY().intValue();
+        //         System.out.println(" Zug (Down): " + result2);
+        //         System.out.println(" Zug (Down): X ist " + y);
+        return y;
+    }
+
+    int moveLeft(int x) {
+
+        MoveInputDto moveLeft = new MoveInputDto();
+        moveLeft.setDirection(DirectionDto.LEFT);
+        MoveDto result4 = defaultApi.gameGameIdMovePost(gameId, moveLeft);
+        x = result4.getPositionAfterMove().getPositionX().intValue();
+        System.out.println(" Zug (Left): " + result4);
+        //         System.out.println(" Zug (Left): Y ist " + x);
+
+        return x;
+    }
+
+
+    void executeMovement(Direction direction, int y ) {
+        boolean canMove = true;
+        boolean blocked = false;
+
+        switch (direction) {
+            case UP: {
+                System.out.println("🎉 Up wurde angewählt!");
+                y = moveUp(y);
+                System.out.println(" Zug (UP): Y ist " + y);
+
+            }
+            break;
+
+            case RIGHT: {
+
+            }
+            break;
+
+            case LEFT: {
+
+            }
+            break;
+
+            case DOWN: {
+
+            }
+            break;
+
         }
     }
 
     @PostConstruct
     public void init() {
-        DefaultApi defaultApi = new DefaultApi();
+        this.defaultApi = new DefaultApi();
         GameInputDto gameInput = new GameInputDto();
         gameInput.setGroupName("OlafRose");
         GameDto response = defaultApi.gamePost(gameInput);
 
-        BigDecimal gameId = response.getGameId();
+        this.gameId = response.getGameId();
 
         System.out.println(response);
 
-        // switchcase Anwendung für Richtung.
-        boolean gameActive = true;
 
-        // Hier wird eine Schleife erzeug welche läuft bis das Spiel zuende
-        // Der Code ist eine Abfrage verschachteltung. Die wichtigste Abfrage kommt zuerst: Im Spielfeld bleiben
-        // Die weiteren Abfragen schlagen eine Andere Richtung ein, sobald auf ein Hinterniss gestoßen wird.
+        boolean gameActive = true;
 
         boolean blocked = false;
 
@@ -99,11 +184,10 @@ public class StartupBean {
         boolean canMoveLeft = true;
         boolean canMoveDown = true;
 
-        // Prarameter für koordinierung
+        // Parameter für koordinierung
 
         int y = 1;
         int x = 1;
-
 
 
         while (gameActive) {
@@ -118,130 +202,75 @@ public class StartupBean {
                 gameActive = false;
             } else {
 
+                Direction direction = Direction.UP;
+                executeMovement(direction, y);
+                //--------- moveUP
+                canMoveUp = checkBorderUpRight(y);
+                while (canMoveUp && blocked == false) {
 
-            //--------- moveUP
+                    blocked = checkPositionBlocked(x, y);
+                    System.out.println("Up, Blocked ist " + blocked);
 
-            canMoveUp = checkBorderUpRight(y);
+                    y = moveUp(y);
+                    System.out.println(" Zug (UP): Y ist " + y);
 
-           while (canMoveUp) {
-
-               canMoveUp = checkBorderUpRight(y);
-
-               if (canMoveUp == true && blocked == false) {
-                   MoveInputDto moveUp = new MoveInputDto();
-                   moveUp.setDirection(DirectionDto.UP);
-                   MoveDto result1 = defaultApi.gameGameIdMovePost(gameId, moveUp);
-                   y = result1.getPositionAfterMove().getPositionY().intValue();
-                   System.out.println(" Zug (UP): " + result1);
-                   System.out.println(" Zug (UP): Y ist " + y);
-               }
-
-               blocked = checkPositionBlocked(x, y);
-               System.out.println("Up, Blocked ist " + blocked);
-
-
-           }
-
+                    canMoveUp = checkBorderUpRight(y);
+                    System.out.println("canMoveUp is " + canMoveUp);
+                }
                 blocked = false;
 
-
-                //--------- moveRIGHT
-                int maxMoves = 6; // Sicherheitsgrenze
-                int moveCount = 0;
-
+                //---------- Move Right
                 canMoveRight = checkBorderUpRight(x);
-               // System.out.println(" Prüfe ob (RIGHT) möglich ");
+                while (canMoveRight && blocked == false) {
 
-                while ( canMoveRight == true && !blocked ) {
-
-                 //   System.out.println("Right, Blocked ist " + blocked);
-
-                 //   System.out.println(" Prüfe ob (RIGHT) möglich, in der Schleife ");
+                    blocked = checkPositionBlocked(x, y);
+                    System.out.println("Right, Blocked ist " + blocked);
+                    x = moveRight(x);
+                    System.out.println(" Zug (Right): X ist " + x);
                     canMoveRight = checkBorderUpRight(x);
 
-                    if (canMoveRight == true && blocked == false ) {
-                        MoveInputDto moveRight = new MoveInputDto();
-                        moveRight.setDirection(DirectionDto.RIGHT);
-                        MoveDto result2 = defaultApi.gameGameIdMovePost(gameId, moveRight);
-                        System.out.println(" Zug (RIGHT): " + result2);
-
-                        x = result2.getPositionAfterMove().getPositionX().intValue();
-                        System.out.println(" Zug (Right): x ist " + x);
-
-                    }
-                    blocked = checkPositionBlocked(x, y);
-                    System.out.println(" Zug (Right): Blocked is " + blocked);
-
-                //    blocked = checkPositionBlocked(x, y);
-                //    System.out.println("Right, Blocked ist " + blocked);
-
-                //    moveCount++;
-
                 }
-
-
                 blocked = false;
-
-
 
                 //--------- moveDOWN
 
                 canMoveDown = checkBorderDownLeft(y);
-           //     System.out.println(" Prüfe zug runter: " + canMoveDown);
-
-                while (canMoveDown) {
-
-                    canMoveDown = checkBorderDownLeft(y);
-
-                    if (canMoveDown == true && blocked == false) {
-                        MoveInputDto moveDown = new MoveInputDto();
-                        moveDown.setDirection(DirectionDto.DOWN);
-                        MoveDto result3 = defaultApi.gameGameIdMovePost(gameId, moveDown);
-                        System.out.println(" Zug (DOWN): " + result3);
-                        y = result3.getPositionAfterMove().getPositionY().intValue();
-                        System.out.println(" Zug (Down): y ist " + y);
-
-
-                    }
-
+                while (canMoveDown && blocked == false) {
 
                     blocked = checkPositionBlocked(x, y);
+                    System.out.println("Down, Blocked ist " + blocked);
 
+                    y = moveDown(y);
+                    System.out.println(" Zug (Down): y ist " + y);
 
+                    canMoveDown = checkBorderDownLeft(y);
                 }
-
-
                 blocked = false;
 
                 // ------- MoveLeft
 
-                canMoveLeft = checkBorderDownLeft(x);
+                canMoveLeft = checkBorderDownLeft(y);
+                while (canMoveLeft && blocked == false) {
 
-                //     System.out.println(" Zug (Left): canMoveLeft" + canMoveLeft);
+                    blocked = checkPositionBlocked(x, y);
+                    System.out.println("Left, Blocked ist " + blocked);
 
-                //   while (canMoveLeft) {
-
-
-                canMoveLeft = checkBorderDownLeft(x);
-
-
-                if (canMoveLeft == true && blocked == false) {
-                    MoveInputDto moveLeft = new MoveInputDto();
-                    moveLeft.setDirection(DirectionDto.LEFT);
-                    MoveDto result4 = defaultApi.gameGameIdMovePost(gameId, moveLeft);
-                     System.out.println(" Zug (Left): " + result4);
-                    x = result4.getPositionAfterMove().getPositionX().intValue();
+                    x = moveLeft(x);
                     System.out.println(" Zug (Left): x ist " + x);
+
+                    canMoveLeft = checkBorderDownLeft(x);
                 }
-
-                blocked = checkPositionBlocked(x, y);
-
-
-                //   }
-
                 blocked = false;
 
+                System.out.println("Drücke die Eingabetaste, um fortzufahren...");
 
+                try {
+                    System.in.read(); // Wartet auf Tasteneingabe (z. B. Enter)
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println("Programm läuft weiter...");
 
             }
         }

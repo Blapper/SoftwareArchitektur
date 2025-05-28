@@ -33,6 +33,9 @@ public class StartupBean {
         UP, RIGHT, DOWN, LEFT
     }
 
+    // Declarieren der Karte
+    int[][] gameMap = new int[7][7];
+
     // Getter
     public int getLastX() {
         return lastX;
@@ -59,12 +62,12 @@ public class StartupBean {
 
     public boolean checkPositionBlocked(int currentX, int currentY) {
         if (currentX == getLastX() && currentY == getLastY()) {
-            System.out.println("❌ Bewegung blockiert - Position unverändert" + "(" + currentX + ", " + currentY + ")");
+            //System.out.println("❌ Bewegung blockiert - Position unverändert" + "(" + currentX + ", " + currentY + ")");
             return true; // Position hat sich NICHT verändert
         } else {
             setLastX(currentX);
             setLastY(currentY);
-            System.out.println("✅ Bewegung erfolgreich zu (" + currentX + ", " + currentY + ")");
+            //System.out.println("✅ Bewegung erfolgreich zu (" + currentX + ", " + currentY + ")");
             return false; // Position hat sich geändert
         }
 
@@ -73,23 +76,80 @@ public class StartupBean {
 
     public boolean checkBorderUpRight(int z) {
         if (z == 5) {
-            System.out.println("Obere Grenze erreicht. Wert " + z);
+            //System.out.println("Obere Grenze erreicht. Wert " + z);
             return false;
         } else {
-            System.out.println("Move Up or Right: Weg Frei. Wert: " + z);
+            //System.out.println("Move Up or Right: Weg Frei. Wert: " + z);
             return true;
         }
     }
 
     public boolean checkBorderDownLeft(int z) {
         if (z == 1) {
-            System.out.println("Untere Grenze erreicht. Wert " + z);
+            //System.out.println("Untere Grenze erreicht. Wert " + z);
             return false;
         } else {
-            System.out.println("Move Down or Left: Weg Frei. Wert: " + z);
+            //System.out.println("Move Down or Left: Weg Frei. Wert: " + z);
             return true;
         }
     }
+
+    public void drawMap(boolean blocked, int x, int y, Direction direction) {
+        int j = x;
+        int i = y;
+
+        if (direction == Direction.UP) {
+         //   System.out.println("\uD83E\uDDF1 Blocked is:"+blocked);
+            if (blocked) {
+                i++;
+                gameMap[i][j] = 3;
+            //    System.out.println("\uD83E\uDDF1 Border!");
+            } else {
+                gameMap[i][j] = 2;
+              //  System.out.println("Wert geändert an stelle X:" + j + " Y:" + i);
+            }
+        }
+
+        if (direction == Direction.DOWN) {
+
+            if (blocked) {
+                i--;
+                gameMap[i][j] = 3;
+              //  System.out.println("\uD83E\uDDF1 Border!");
+            }else {
+                gameMap[i][j] = 2;
+               // System.out.println("Wert geändert an stelle X:" + j + " Y:" + i);
+
+            }
+        }
+
+        if (direction == Direction.LEFT) {
+
+            if (blocked) {
+                j--;
+                gameMap[i][j] = 3;
+               // System.out.println("\uD83E\uDDF1 Border!");
+            } else {
+                gameMap[i][j] = 2;
+                //System.out.println("Wert geändert an stelle X:" + j + " Y:" + i);
+
+            }
+        }
+
+        if (direction == Direction.RIGHT) {
+
+                if (blocked) {
+                    j++;
+                    gameMap[i][j] = 3;
+                   // System.out.println("\uD83E\uDDF1 Border!");
+                }else {
+                    gameMap[i][j] = 2;
+                  //  System.out.println("Wert geändert an stelle X:" + j + " Y:" + i);
+
+                }
+        }
+}
+
 
     // Bewegungsmethoden
     int moveUp(int y) {
@@ -109,7 +169,7 @@ public class StartupBean {
         moveRight.setDirection(DirectionDto.RIGHT);
         MoveDto result2 = defaultApi.gameGameIdMovePost(gameId, moveRight);
         z = result2.getPositionAfterMove().getPositionX().intValue();
-        System.out.println(" Zug (RIGHT): " + result2);
+        //System.out.println(" Zug (RIGHT): " + result2);
 
         return z;
     }
@@ -120,7 +180,7 @@ public class StartupBean {
         moveDown.setDirection(DirectionDto.DOWN);
         MoveDto result3 = defaultApi.gameGameIdMovePost(gameId, moveDown);
         y = result3.getPositionAfterMove().getPositionY().intValue();
-        System.out.println(" Zug (Down): " + result3);
+        //System.out.println(" Zug (Down): " + result3);
         //         System.out.println(" Zug (Down): X ist " + y);
         return y;
     }
@@ -131,39 +191,39 @@ public class StartupBean {
         moveLeft.setDirection(DirectionDto.LEFT);
         MoveDto result4 = defaultApi.gameGameIdMovePost(gameId, moveLeft);
         x = result4.getPositionAfterMove().getPositionX().intValue();
-        System.out.println(" Zug (Left): " + result4);
+        // System.out.println(" Zug (Left): " + result4);
         //         System.out.println(" Zug (Left): Y ist " + x);
 
         return x;
     }
 
-    
+
     int executeMovement(Direction direction, int z, Boolean canMove) {
 
         switch (direction) {
             case UP: {
                 if (canMove) {
-                    System.out.println("🎉 Up wurde angewählt!");
+                 //   System.out.println("⬆\uFE0F Up wurde angewählt!");
                     z = moveUp(z);
-                    System.out.println(" Zug (UP): Y ist " + z);
+                //    System.out.println(" Zug (UP): Y ist " + z);
                 }
             }
             break;
 
             case RIGHT: {
                 if (canMove) {
-                    System.out.println("🎉 Right wurde angewählt!");
+                //    System.out.println("➡\uFE0F Right wurde angewählt!");
                     z = moveRight(z);
-                    System.out.println(" Zug (Right): X ist " + z);
+                //    System.out.println(" Zug (Right): X ist " + z);
                 }
             }
             break;
 
             case LEFT: {
                 if (canMove) {
-                    System.out.println("🎉 Left wurde angewählt!");
+                //    System.out.println("⬅\uFE0F Left wurde angewählt!");
                     z = moveLeft(z);
-                    System.out.println(" Zug (Left): X ist " + z);
+                //    System.out.println(" Zug (Left): X ist " + z);
                 }
 
             }
@@ -171,9 +231,9 @@ public class StartupBean {
 
             case DOWN: {
                 if (canMove) {
-                    System.out.println("🎉 Down wurde angewählt!");
+               //     System.out.println("⬇\uFE0F Down wurde angewählt!");
                     z = moveDown(z);
-                    System.out.println(" Zug (Down): Y ist " + z);
+                //    System.out.println(" Zug (Down): Y ist " + z);
                 }
 
             }
@@ -210,10 +270,18 @@ public class StartupBean {
         int y = 1;
         int x = 1;
 
-        int[][] gameMap = new int[5][5];
-
         // Parameter für Richtung
         int richtung = 0;
+
+        // Erstellen der Karte
+       // int[][] gameMap = new int[7][7];
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 7; j++) {
+                gameMap[i][j] = 1;
+                System.out.print("["+gameMap[i][j]+"]");
+            }
+            System.out.println();
+        }
 
 
         while (gameActive) {
@@ -230,18 +298,9 @@ public class StartupBean {
 
                 Direction direction;
 
-                // Optional: Initialisierung und Ausgabe
-                for (int i = 0; i < 5; i++) {
-                    for (int j = 0; j < 5; j++) {
-                        gameMap[i][j] = 1; // Beispielwert
-                        System.out.print("["+gameMap[i][j]+"]");
-                    }
-                    System.out.println();
-                }
-
                     richtung = generiereZahl();
                     System.out.println("Richtung ist: " + richtung);
-                    richtung = 1;
+
 
                     if (richtung == 1) {
                         //--------- moveUP
@@ -249,17 +308,15 @@ public class StartupBean {
                         direction = Direction.UP;
                         y = executeMovement(direction, y, canMoveUp);
                         blocked = checkPositionBlocked(x, y);
-
-                        if (blocked) {
-                            y++;
-                            gameMap[y][x] = 0;
-                            y--;
-                        } else {
-                            gameMap[y][x] = 2;
-                        }
-
+                        drawMap( blocked, x, y, direction);
 
                     }
+                /**System.out.println("Drücke die Eingabetaste, um fortzufahren...");
+                try {
+                    System.in.read();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } **/
 
                     if (richtung == 2) {
 
@@ -269,6 +326,7 @@ public class StartupBean {
                         x = executeMovement(direction, x, canMoveRight);
                         blocked = checkPositionBlocked(x, y);
 
+                        drawMap( blocked, x, y, direction);
 
                     }
 
@@ -279,7 +337,7 @@ public class StartupBean {
                         x = executeMovement(direction, x, canMoveLeft);
                         blocked = checkPositionBlocked(x, y);
 
-
+                        drawMap( blocked, x, y, direction);
                     }
 
                     if (richtung == 4) {
@@ -289,13 +347,24 @@ public class StartupBean {
                         y = executeMovement(direction, y, canMoveDown);
                         blocked = checkPositionBlocked(x, y);
 
-                        System.out.println("Drücke die Eingabetaste, um fortzufahren...");
-                        try {
-                            System.in.read(); // Wartet auf Tasteneingabe (z. B. Enter)
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        drawMap( blocked, x, y, direction);
                     }
+                for (int i = 0; i < 7  ; i++) {
+                    System.out.println();
+                }
+                // Erstellen der Karte
+                for (int i = 0; i < 7; i++) {
+                    for (int j = 0; j < 7; j++) {
+                        System.out.print("["+gameMap[i][j]+"]");
+                    }
+                    System.out.println();
+                }
+
+                try {
+                    Thread.sleep(500); // 2000 Millisekunden = 2 Sekunden
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 }
 
